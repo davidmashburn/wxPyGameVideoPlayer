@@ -145,6 +145,19 @@ def AddMultipleSplat(x, *args):
         x.Add(*i)
     return x
 
+class DummyDataInterface(object):
+    num_frames = 50
+    def update(self):
+        pass
+    def play(self, playback_speed, reverse=False, skip_frames=False):
+        pass
+    def stop(self):
+        pass
+    def load_new_file(self):
+        pass
+    def update_traces(self):
+        pass
+
 SKIP_VALUE = 20
 
 class PlaybackControlsFrameMixin(wx.Frame):
@@ -199,7 +212,7 @@ class PlaybackControlsFrameMixin(wx.Frame):
                                   callback=self.play)
         self.skip_to_end_button = button(self, '>|', min_size=(35, -1),
                                          tooltip='Go back one frame',
-                                         callback=partial(self.set_frame_number, self.get_last_frame()))
+                                         callback=self.skip_to_end)
 
         # Sizers
         self.playback_speed_sizer = AddMultiple(HSizer(), (0, 0, 0),
@@ -241,6 +254,8 @@ class PlaybackControlsFrameMixin(wx.Frame):
         frame_number = int(self.frame_number_textbox.GetValue()) + offset
         self.set_frame_number(frame_number)
 
+    def skip_to_end(self): # Because you can only cheat so much :)
+        return self.set_frame_number(self.get_last_frame())
 
 class VideoPlayerFrame(PlaybackControlsFrameMixin):
     def __init__(self, *args, **kwds):
@@ -299,25 +314,33 @@ class VideoPlayerFrame(PlaybackControlsFrameMixin):
                                                self.update_traces_button
                                               )
     def set_data(self, data_object):
-        pass#self.data = data_object
+        self.data = data_object
+    
     def update_data(self):
-        pass#self.data.
+        self.data.update()
+    
     def get_last_frame(self):
-        # FOR TESTING
-        return 10 #pass#self.data.
+        return self.data.num_frames - 1
+    
     def play(self, reverse_direction=False):
-        pass#self.data.
+        playback_speed = int(self.playback_speed_textbox.GetValue())
+        skip_frames = bool(self.skip_frames_checkbox.GetValue())
+        self.data.play(playback_speed=playback_speed, reverse=reverse_direction, skip_frames=skip_frames)
+    
     def stop(self):
-        pass#self.data.
+        self.data.stop()
+    
     def load_new_file(self):
-        pass#self.data.
+        self.data.load_new_file()
+    
     def update_traces(self):
-        pass#self.data.
+        self.data.update_traces()
 
 class VideoApp(wx.App):
     def OnInit(self):
         wx.InitAllImageHandlers()
         self.video_frame = VideoPlayerFrame(None, -1, "")
+        self.video_frame.set_data(DummyDataInterface())
         self.video_frame.Move(wx.Point(wx.DisplaySize()[0] - self.video_frame.GetSize()[0] - 20, 20))
         self.SetTopWindow(self.video_frame)
         self.video_frame.Show()
