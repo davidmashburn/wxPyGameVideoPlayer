@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 
 from wx_video_ui import VideoPlayerFrame
 
-USE_MPL = False
+USE_MPL = True
 USE_PYGAME = True
 
 import cv2_utils
@@ -40,16 +40,16 @@ class OpenCVDataInterface(object):
         self.pygame_plot_object = pygame_plot_object
         self.pygame_thread = pygame_thread
     
-    def plot(self, frame_num):
+    def plot(self, frame_num, use_mpl=False):
         self.frame_data = cv2_utils.get_opencv_frame_as_array(self.filename, frame_num)
-        if USE_MPL:
+        if use_mpl:
             plt.imshow(self.frame_data)
             plt.draw()
         if USE_PYGAME:
             pygame_plot_object.imshowT(self.frame_data)
     def update(self):
         frame_num = self.gui_app.get_frame_number()
-        self.plot(frame_num)
+        self.plot(frame_num, use_mpl=USE_MPL)
     
     def play(self, start_frame, playback_speed, reverse=False, skip_frames=False):
         if USE_PYGAME:
@@ -105,23 +105,21 @@ class VideoApp(wx.App):
     
     def get_frame_number(self):
         return self.video_frame.get_frame_number()
-    
-    def set_frame_number(self, i):
-        return self.video_frame.set_frame_number(i)
 
 if __name__ == "__main__":
     #test_video = ''
     
+    plt.ion()
     image_fig = plt.figure(1)
     plot_fig = plt.figure(2)
+    plt.ioff()
     
     gui_app = VideoApp(0)
     pygame_plot_object = pygame_interface.PygamePlotObject()
-    pygame_thread = pygame_interface.PygameThread(gui_app.set_frame_number)
+    pygame_thread = pygame_interface.PygameThread(gui_app.video_frame.set_frame_number_no_update)
     pygame_thread.start()
     
     dat = OpenCVDataInterface(gui_app, pygame_plot_object, pygame_thread)
     gui_app.video_frame.set_data(dat)
     #dat.load_new_file(test_video)
     gui_app.MainLoop()
-    plt.show()

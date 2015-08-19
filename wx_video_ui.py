@@ -110,9 +110,12 @@ class PlaybackControlsFrameMixin(wx.Frame):
     def get_frame_number(self):
         return int(self.frame_number_textbox.GetValue())
     
-    def set_frame_number(self, frame_number):
+    def set_frame_number_no_update(self, frame_number):
         new_frame_number = clip(int(frame_number), 0, self.get_last_frame())
         self.frame_number_textbox.SetValue(str(new_frame_number))
+    
+    def set_frame_number(self, frame_number):
+        self.set_frame_number_no_update(frame_number)
         self.update_data()
     
     def get_playback_speed(self):
