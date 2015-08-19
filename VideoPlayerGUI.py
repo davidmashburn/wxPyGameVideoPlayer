@@ -63,18 +63,17 @@ def add_callback_kwd_arg(event_type):
             ctrl = func(frame, *args, **kwds)
             if callback is not None:
                 needs_arg = True
-                print func.__name__
                 if hasattr(callback, 'args'): # handle partials
-                    print 'partial has %d args' % len(callback.args)
+                    # print 'partial has %d args' % len(callback.args)
                     if len(callback.args)>1:
                         needs_arg = False
                 else:
-                    print callback.__name__+' has %d args' % len(inspect.getargspec(callback).args)
+                    # print callback.__name__+' has %d args' % len(inspect.getargspec(callback).args)
                     if len(inspect.getargspec(callback).args)>1: # handle normal functions
                         needs_arg = False
                 
                 if needs_arg:
-                    print 'NEEDS ARG'
+                    #print 'NEEDS ARG'
                     callback = make_callback(callback)
                 frame.Bind(event_type, callback, ctrl)
             return ctrl
@@ -146,10 +145,9 @@ def AddMultipleSplat(x, *args):
     return x
 
 class DummyDataInterface(object):
-    num_frames = 50
     def update(self):
         pass
-    def play(self, playback_speed, reverse=False, skip_frames=False):
+    def play(self, start_frame, playback_speed, reverse=False, skip_frames=False):
         pass
     def stop(self):
         pass
@@ -157,6 +155,8 @@ class DummyDataInterface(object):
         pass
     def update_traces(self):
         pass
+    def get_number_of_frames(self):
+        return 50
 
 SKIP_VALUE = 20
 
@@ -168,7 +168,7 @@ class PlaybackControlsFrameMixin(wx.Frame):
        Functions:
            update_data(self)
            get_last_frame(self)
-           play(self, reverse_direction=False)
+           play(self, reverse=False)
            stop(self)
     '''
     def __init__(self):
@@ -191,7 +191,7 @@ class PlaybackControlsFrameMixin(wx.Frame):
                                            callback=partial(self.set_frame_number, 0))
         self.rewind_button = button(self, '<|', min_size=(35, -1),
                                     tooltip='Rewind',
-                                    callback=partial(self.play, reverse_direction=True))
+                                    callback=partial(self.play, reverse=True))
         self.jump_back_button = button(self, '-'+str(SKIP_VALUE), min_size=(15*(len(str(SKIP_VALUE))+1), -1),
                                        tooltip='Jump back {0} frames'.format(SKIP_VALUE),
                                        callback=partial(self.offset_frame_num, -SKIP_VALUE), )
@@ -209,7 +209,7 @@ class PlaybackControlsFrameMixin(wx.Frame):
                                           callback=partial(self.offset_frame_num, 10))
         self.play_button = button(self, '|>', min_size=(35, -1),
                                   tooltip='Go back one frame',
-                                  callback=self.play)
+                                  callback=partial(self.play, reverse=False))
         self.skip_to_end_button = button(self, '>|', min_size=(35, -1),
                                          tooltip='Go back one frame',
                                          callback=self.skip_to_end)
@@ -245,10 +245,19 @@ class PlaybackControlsFrameMixin(wx.Frame):
                                                    self.play_controls_sizer,
                                                    self.frame_num_sizer
                                                   )
+    def get_frame_number(self):
+        return int(self.frame_number_textbox.GetValue())
+    
     def set_frame_number(self, frame_number):
         new_frame_number = clip(int(frame_number), 0, self.get_last_frame())
         self.frame_number_textbox.SetValue(str(new_frame_number))
         self.update_data()
+    
+    def get_playback_speed(self):
+        return int(self.playback_speed_textbox.GetValue())
+    
+    def set_playback_speed(self, speed):
+        self.playback_speed_textbox.SetValue(str(speed))
 
     def offset_frame_num(self, offset):
         frame_number = int(self.frame_number_textbox.GetValue()) + offset
@@ -268,13 +277,14 @@ class VideoPlayerFrame(PlaybackControlsFrameMixin):
         PlaybackControlsFrameMixin.__init__(self)
         self._build_update_traces()
         
-        self.main_sizer = AddMultipleSplat(wx.FlexGridSizer(6, 1, 0, 0),
+        self.main_sizer = AddMultipleSplat(wx.FlexGridSizer(5, 1, 0, 0),
                                            (self.file_controls_sizer, 1, wx.EXPAND, 0),
                                            ((20, 20), 0, 0, 0),
-                                           (self.playback_controls_sizer, 1, wx.EXPAND, 0),
+                                           (self.playback_controls_sizer, 1, 0, 0),
                                            ((20, 20), 0, 0, 0),
                                            (self.update_traces_sizer, 1, wx.EXPAND, 0),
                                           )
+        self.main_sizer.AddGrowableCol(0)
         self.SetSizer(self.main_sizer)
         self.Layout()
         
@@ -283,26 +293,21 @@ class VideoPlayerFrame(PlaybackControlsFrameMixin):
 
     def _build_file_controls(self):
         self.file_controls_box = static_box(self, "File Controls")
+        self.file_name_textbox = text_ctrl(self, "", min_size=(400, 21))
         self.load_new_file_button = button(self, "Load New File",
                                            tooltip="Load a new experiment data file to memory",
                                            callback=self.load_new_file)
-        self.load_whole_movie_checkbox = check_box(self, "LoadWholeMovie?")
-        self.file_name_textbox = text_ctrl(self, "", min_size=(400, 21))
         self.comments_label = static_text(self, "Comments:")
         self.comments_textbox = text_ctrl(self, "", min_size=(400, 100),
                                           style=wx.TE_MULTILINE|wx.TE_WORDWRAP)
         
-        self.load_new_file_sizer = AddMultiple(HSizer(), (0, 0, 0),
-                                               self.load_new_file_button,
-                                               (20, 20),
-                                               self.load_whole_movie_checkbox,
-                                              )
         self.file_controls_grid_sizer = AddMultipleSplat(wx.FlexGridSizer(4, 1, 0, 0),
-                                                        (self.load_new_file_sizer, 1, wx.EXPAND, 0),
-                                                        (self.file_name_textbox, 0, wx.EXPAND, 0),
-                                                        (self.comments_label, 0, 0, 0),
-                                                        (self.comments_textbox, 0, 0, 0),
-                                                       )
+                                                         (self.file_name_textbox, 0, wx.EXPAND, 0),
+                                                         (self.load_new_file_button, 1, 0, 0),
+                                                         (self.comments_label, 0, 0, 0),
+                                                         (self.comments_textbox, 0, 0, 0),
+                                                        )
+        self.file_controls_grid_sizer.AddGrowableCol(0)
         
         self.file_controls_sizer = AddMultipleSplat(wx.StaticBoxSizer(self.file_controls_box, wx.HORIZONTAL),
                                                     (self.file_controls_grid_sizer, 1, wx.EXPAND, 0),
@@ -320,12 +325,13 @@ class VideoPlayerFrame(PlaybackControlsFrameMixin):
         self.data.update()
     
     def get_last_frame(self):
-        return self.data.num_frames - 1
+        return self.data.get_number_of_frames() - 1
     
-    def play(self, reverse_direction=False):
-        playback_speed = int(self.playback_speed_textbox.GetValue())
+    def play(self, reverse=False):
+        start_frame = self.get_frame_number()
+        playback_speed = self.get_playback_speed()
         skip_frames = bool(self.skip_frames_checkbox.GetValue())
-        self.data.play(playback_speed=playback_speed, reverse=reverse_direction, skip_frames=skip_frames)
+        self.data.play(start_frame, playback_speed=playback_speed, reverse=reverse, skip_frames=skip_frames)
     
     def stop(self):
         self.data.stop()
