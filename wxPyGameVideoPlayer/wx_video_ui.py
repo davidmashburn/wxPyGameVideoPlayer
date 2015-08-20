@@ -133,6 +133,8 @@ class PlaybackControlsFrameMixin(wx.Frame):
 
 class VideoPlayerFrame(PlaybackControlsFrameMixin):
     def __init__(self, *args, **kwds):
+        self.traces_checkbox_names = kwds.pop('traces_checkbox_names', [])
+        
         wx.Frame.__init__(self, *args, **kwds)
         
         self.SetTitle("Experiment Viewing GUI")
@@ -141,6 +143,7 @@ class VideoPlayerFrame(PlaybackControlsFrameMixin):
         self._build_file_controls()
         PlaybackControlsFrameMixin.__init__(self)
         self._build_update_traces()
+        self._build_traces_checkboxes()
         
         self.main_sizer = AddMultipleSplat(wx.FlexGridSizer(5, 1, 0, 0),
                                            (self.file_controls_sizer, 1, wx.EXPAND, 0),
@@ -148,6 +151,7 @@ class VideoPlayerFrame(PlaybackControlsFrameMixin):
                                            (self.playback_controls_sizer, 1, 0, 0),
                                            ((20, 20), 0, 0, 0),
                                            (self.update_traces_sizer, 1, wx.EXPAND, 0),
+                                           (self.trace_checkbox_sizer, 1, wx.EXPAND, 0),
                                           )
         self.main_sizer.AddGrowableCol(0)
         self.SetSizer(self.main_sizer)
@@ -183,6 +187,12 @@ class VideoPlayerFrame(PlaybackControlsFrameMixin):
         self.update_traces_sizer = AddMultiple(HSizer(), (0, 0, 0),
                                                self.update_traces_button
                                               )
+    def _build_traces_checkboxes(self):
+        self.trace_checkboxes = [check_box(self, trace_name)
+                                 for trace_name in self.traces_checkbox_names]
+        self.trace_checkbox_sizer = AddMultiple(VSizer(), (0, 0, 0),
+                                                *self.trace_checkboxes)
+
     def set_data(self, data_object):
         self.data = data_object
     
@@ -208,9 +218,13 @@ class VideoPlayerFrame(PlaybackControlsFrameMixin):
         self.data.update_traces()
 
 class DummyVideoApp(wx.App):
+    def __init__(self, *args, **kwds):
+        self.traces_checkbox_names = kwds.pop('traces_checkbox_names', [])
+        wx.App.__init__(self, *args, **kwds)
+
     def OnInit(self):
         wx.InitAllImageHandlers()
-        self.video_frame = VideoPlayerFrame(None, -1, "")
+        self.video_frame = VideoPlayerFrame(None, -1, "", traces_checkbox_names=self.traces_checkbox_names)
         self.video_frame.set_data(DummyDataInterface())
         self.video_frame.Move(wx.Point(wx.DisplaySize()[0] - self.video_frame.GetSize()[0] - 20, 20))
         self.SetTopWindow(self.video_frame)
@@ -218,5 +232,5 @@ class DummyVideoApp(wx.App):
         return 1
 
 if __name__ == "__main__":
-    app = DummyVideoApp(0)
+    app = DummyVideoApp(0, traces_checkbox_names=['that', 'this', 'those'])
     app.MainLoop()
