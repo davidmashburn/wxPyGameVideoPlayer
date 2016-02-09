@@ -12,20 +12,38 @@ def get_frame_to_msec(frame_rate):
     return lambda frame_number: 1000. * frame_number / frame_rate
 
 def get_frame_rate(video_file):
+    '''Get the frame rate for a video file'''
     cap = cv2.VideoCapture(video_file)
     frame_rate = cap.get(cv2.CAP_PROP_FPS)
     cap.release()
     return frame_rate
 
-def get_opencv_frame(video_file, frame_number, frame_rate=None):
-    '''Get a single frame from a video file using OpenCV
+def get_opencv_position(cap, frame_rate=None):
+    '''Get the frame position in the OpenCV video'''
+    frame_time = cap.get(cv2.CAP_PROP_POS_MSEC)
+    frame_rate = (frame_rate if frame_rate is not None else
+                  cap.get(cv2.CAP_PROP_FPS))
+    return get_msec_to_frame(frame_rate)(frame_time)
+
+def set_opencv_position(cap, frame_number, frame_rate=None):
+    '''Set the frame number in the OpenCV video.
+       
        This is not as simple as it sounds and requires converting the
-       frame number to a frame time.'''
-    cap = cv2.VideoCapture(video_file)
+       frame number to a frame time.
+       
+       THIS WILL ONLY WORK ONE TIME FOR SOME REASON.
+       After that it reverts to the original position!
+       I assume this is some kind of OpenCV bug.'''
     frame_rate = (frame_rate if frame_rate is not None else
                   cap.get(cv2.CAP_PROP_FPS))
     frame_time = get_frame_to_msec(frame_rate)(frame_number)
-    cap.set(cv2.CAP_PROP_POS_MSEC, frame_time)
+    return cap.set(cv2.CAP_PROP_POS_MSEC, frame_time)
+
+
+def get_opencv_frame(video_file, frame_number, frame_rate=None):
+    '''Get a single frame from a video file using OpenCV'''
+    cap = cv2.VideoCapture(video_file)
+    set_opencv_position(cap, frame_number, frame_rate)
     ret, frame = cap.read()
     cap.release()
     return ret, frame

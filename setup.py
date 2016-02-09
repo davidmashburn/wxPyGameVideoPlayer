@@ -21,6 +21,6 @@ setup(
                       'wxPython>=2.8',
                       'matplotlib>=1.0'
                       'pygame>=1.9',
-                      # 'cv2', # there is no way to depend on this, but you need to have it :)
+                      # 'cv2', # there is no way to depend on this here, but you need to have it :)
                      ],
 )
