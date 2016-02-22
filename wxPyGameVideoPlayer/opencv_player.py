@@ -37,6 +37,7 @@ class OpenCVDataInterface(object):
     mpl_image_fig = None
     use_mpl = True
     use_pygame = True
+    _last_seen_frame = 0
     
     def __init__(self, gui_app, use_mpl=True, use_pygame=True):
         self.gui_app = gui_app
@@ -99,7 +100,7 @@ class OpenCVDataInterface(object):
 
     def update(self):
         '''Called when switching frames or hitting pause'''
-        frame_num = self.gui_app.get_frame_number()
+        frame_num = self.get_frame_number()
         self.plot_frame(frame_num, use_mpl=self.use_mpl)
         self.update_vline()
     
@@ -143,17 +144,25 @@ class OpenCVDataInterface(object):
         return self.num_frames
     
     def get_frame_number(self):
-        return int(self.gui_app.video_frame.get_frame_number())
+        frame_num = int(self.gui_app.video_frame.get_frame_number())
+        self._last_seen_frame = frame_num # very important for cursor updating
+        return frame_num
     
     def get_frame_time(self, frame_num=None):
         frame_num = (frame_num if frame_num is not None else
                      self.get_frame_number())
+        self._last_seen_frame = frame_num # very important for cursor updating
         return frame_num / self._video_frame_rate
     
-    def pygame_callback(self, frame_number):
+    def pygame_callback(self, frame_number, cursor_skip=0):
         '''Everything to run during the pygame thread updating'''
         self.gui_app.video_frame.set_frame_number_no_update(frame_number)
-        self.update_vline(frame_number) # Makes the cursor move dynamically :D
+        
+        # Makes the cursor move dynamically :D
+        # Optionally limit how often this gets called to prevent UI freeze
+        if frame_number > self._last_seen_frame + cursor_skip:
+            print 'Update Vline', frame_number, cursor_skip, self._last_seen_frame
+            self.update_vline(frame_number)
 
 
 class VideoApp(wx.App):
@@ -180,7 +189,7 @@ if __name__ == "__main__":
     
     # Build all the interfaces
     gui_app = VideoApp(0)
-    dat = OpenCVDataInterface(gui_app, use_mpl=False)
+    dat = OpenCVDataInterface(gui_app)
     pygame_plot_object = pygame_interface.PygamePlotObject()
     pygame_thread = pygame_interface.PygameThread(dat.pygame_callback)
     
