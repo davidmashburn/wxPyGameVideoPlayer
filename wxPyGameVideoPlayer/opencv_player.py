@@ -37,7 +37,8 @@ class OpenCVDataInterface(object):
     mpl_image_fig = None
     use_mpl = True
     use_pygame = True
-    _last_seen_frame = 0
+    _lock_finished_time = None # Ready to go: use -1 for totally locked
+                               #              use a timestamp for temporary locking
     
     def __init__(self, gui_app, use_mpl=True, use_pygame=True):
         self.gui_app = gui_app
@@ -97,6 +98,8 @@ class OpenCVDataInterface(object):
         
         if self.use_pygame:
             self.pygame_plot_object.imshowT(self.frame_data)
+        
+        
 
     def update(self):
         '''Called when switching frames or hitting pause'''
@@ -145,25 +148,31 @@ class OpenCVDataInterface(object):
     
     def get_frame_number(self):
         frame_num = int(self.gui_app.video_frame.get_frame_number())
-        self._last_seen_frame = frame_num # very important for cursor updating
         return frame_num
     
     def get_frame_time(self, frame_num=None):
         frame_num = (frame_num if frame_num is not None else
                      self.get_frame_number())
-        self._last_seen_frame = frame_num # very important for cursor updating
         return frame_num / self._video_frame_rate
     
-    def pygame_callback(self, frame_number, cursor_skip=0):
+    def pygame_callback(self, frame_number):
         '''Everything to run during the pygame thread updating'''
         self.gui_app.video_frame.set_frame_number_no_update(frame_number)
         
-        # Makes the cursor move dynamically :D
-        # Optionally limit how often this gets called to prevent UI freeze
-        if frame_number > self._last_seen_frame + cursor_skip:
-            print 'Update Vline', frame_number, cursor_skip, self._last_seen_frame
+        # Skip if the draw is in progress or it is less than 10 ms after the last draw finished
+        # This allows the wxPython GUI time in the thread to respond
+        # (tests to run matplotlib in a separate thread totally flopped)
+        WAIT_TIME = 0.01
+        
+        # If the timer is up, release the lock
+        if (self._lock_finished_time is not None and
+            self._lock_finished_time + WAIT_TIME < time.time()):
+            self._lock_finished_time = None
+        
+        if self._lock_finished_time is None:
+            self._lock_finished_time = -1
             self.update_vline(frame_number)
-
+            self._lock_finished_time = time.time()
 
 class VideoApp(wx.App):
     def __init__(self, *args, **kwds):
