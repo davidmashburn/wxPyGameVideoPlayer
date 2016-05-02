@@ -1,7 +1,14 @@
-'''Utilities for loading specific frames from videos using OpenCV'''
+# coding: utf-8
+
 
 import numpy as np
 import cv2
+
+try:
+    import pydub
+except ImportError:
+    print '\n'.join(('Warning, pydub is not installed!',
+                     '"mp4_to_array" cannot be used!'))
 
 def get_msec_to_frame(frame_rate):
     '''Get the function to convert from frame time (ms) to frame number'''
@@ -39,7 +46,6 @@ def set_opencv_position(cap, frame_number, frame_rate=None):
     frame_time = get_frame_to_msec(frame_rate)(frame_number)
     return cap.set(cv2.CAP_PROP_POS_MSEC, frame_time)
 
-
 def get_opencv_frame(video_file, frame_number, frame_rate=None):
     '''Get a single frame from a video file using OpenCV'''
     cap = cv2.VideoCapture(video_file)
@@ -67,3 +73,13 @@ def get_opencv_frame_as_array(video_file, frame_number, frame_rate=None):
     ret, frame = get_opencv_frame(video_file, frame_number,
                                   frame_rate=frame_rate)
     return (np.array(frame) if ret else frame)
+
+def mp4_to_array(f):
+    '''Read audio straight from a movie file using pydub (and indirectly ffmpeg)
+       Returns the frame rate and the actual array with shape (#frames, #channels)'''
+    aud = pydub.AudioSegment.from_file(f)
+    frame_rate = aud.frame_rate
+    frame_count = aud.frame_count()
+    new_shape = aud.frame_count(), aud.channels
+    arr = np.frombuffer(aud._data, dtype=np.int16).reshape(new_shape)
+    return frame_rate, arr
