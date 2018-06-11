@@ -1,10 +1,13 @@
 '''Basic funcitonal wxPython UI without any actually plotting'''
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import wx
 from functools import partial
 
-from wx_func_utils import (static_text, text_ctrl, check_box, button, static_box,
-                           VSizer, HSizer, clip, AddMultiple, AddMultipleSplat)
+from .wx_func_utils import (static_text, text_ctrl, check_box, button, static_box,
+                            VSizer, HSizer, clip, AddMultiple, AddMultipleSplat)
 
 class DummyDataInterface(object):
     def update(self):

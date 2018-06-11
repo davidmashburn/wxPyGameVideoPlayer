@@ -1,5 +1,7 @@
 '''Some functional utilities to make working with wxPython less verbose and easier to read'''
 
+from __future__ import print_function
+
 import inspect
 import wx
 
@@ -50,16 +52,16 @@ def add_callback_kwd_arg(event_type):
             if callback is not None:
                 needs_arg = True
                 if hasattr(callback, 'args'): # handle partials
-                    # print 'partial has %d args' % len(callback.args)
+                    # print('partial has %d args' % len(callback.args))
                     if len(callback.args)>1:
                         needs_arg = False
                 else:
-                    # print callback.__name__+' has %d args' % len(inspect.getargspec(callback).args)
+                    # print(callback.__name__+' has %d args' % len(inspect.getargspec(callback).args))
                     if len(inspect.getargspec(callback).args)>1: # handle normal functions
                         needs_arg = False
                 
                 if needs_arg:
-                    #print 'NEEDS ARG'
+                    #print('NEEDS ARG')
                     callback = make_callback(callback)
                 frame.Bind(event_type, callback, ctrl)
             return ctrl

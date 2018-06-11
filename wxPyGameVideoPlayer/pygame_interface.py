@@ -1,8 +1,15 @@
 '''Objects to handle threaded image drawing with Pygame'''
 
+from __future__ import absolute_import
+
+import sys
 import time
 import threading
-import Queue
+
+if sys.version[0] == '2':
+    import Queue as queue
+else:
+    import queue as queue
 
 import numpy as np
 import wx
@@ -51,7 +58,7 @@ class PygameThread(threading.Thread):
             if qval.id_string == 'Stop':
                 pass
             if qval.id_string == 'Start':
-                print 'reverse is', qval.reverse
+                print('reverse is', qval.reverse)
                 step, test = ((-1, lambda x: x > 0)
                               if qval.reverse else
                               (1, lambda x: x < qval.num_frames))
@@ -70,7 +77,7 @@ class PygameThread(threading.Thread):
                     wx.CallAfter(self.gui_callback, cur_frame) # send the frame number back to the GUI to update
                     
                     qval.plot_function(cur_frame)
-                    print 'show frame', cur_frame
+                    print('show frame', cur_frame)
                     
                     while time.time()<t+(1.0/qval.speed):
                         pass

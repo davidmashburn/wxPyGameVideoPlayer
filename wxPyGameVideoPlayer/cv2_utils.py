@@ -1,5 +1,6 @@
 # coding: utf-8
 
+from __future__ import print_function
 
 import numpy as np
 import cv2
@@ -7,8 +8,8 @@ import cv2
 try:
     import pydub
 except ImportError:
-    print '\n'.join(('Warning, pydub is not installed!',
-                     '"mp4_to_array" cannot be used!'))
+    print('\n'.join(('Warning, pydub is not installed!',
+                     '"mp4_to_array" cannot be used!')))
 
 def get_msec_to_frame(frame_rate):
     '''Get the function to convert from frame time (ms) to frame number'''

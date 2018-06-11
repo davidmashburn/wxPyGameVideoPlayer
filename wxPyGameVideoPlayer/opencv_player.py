@@ -8,6 +8,9 @@ A separate wxPython window handles the GUI events
 This is forked from a previous project, ca. 4/2007
 '''
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 import time
 import numpy as np
@@ -17,9 +20,9 @@ matplotlib.use('WxAgg')
 matplotlib.interactive(False)
 import matplotlib.pyplot as plt
 
-from wx_video_ui import VideoPlayerFrame
-import cv2_utils
-import pygame_interface
+from .wx_video_ui import VideoPlayerFrame
+from . import cv2_utils
+from . import pygame_interface
 
 from mpl_utils import plotting_decorator, plot_or_update
 
@@ -127,7 +130,7 @@ class OpenCVDataInterface(object):
     
     def load_new_file(self, filename=None):
         filename = wx.FileSelector() if filename is None else filename
-        print filename
+        print(filename)
         if filename == self.filename:    # already loaded
             return
         if not os.path.exists(filename): # file does not exist

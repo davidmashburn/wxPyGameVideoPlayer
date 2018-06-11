@@ -1,7 +1,8 @@
-import cv2_utils
-import wx_func_utils
-import wx_video_ui
-import pygame_interface
-import opencv_player
-import _version
-from _version import *
+from __future__ import absolute_import
+from . import cv2_utils
+from . import wx_func_utils
+from . import wx_video_ui
+from . import pygame_interface
+from . import opencv_player
+from . import _version
+from ._version import *
