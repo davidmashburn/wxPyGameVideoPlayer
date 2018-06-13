@@ -49,7 +49,7 @@ class PygameThread(threading.Thread):
     def __init__(self, gui_callback):
         threading.Thread.__init__(self)
         self.gui_callback = gui_callback
-        self.queue = Queue.Queue()
+        self.queue = queue.Queue()
         self.setDaemon(True)
 
     def run(self):

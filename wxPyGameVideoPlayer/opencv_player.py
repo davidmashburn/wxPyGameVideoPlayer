@@ -129,7 +129,7 @@ class OpenCVDataInterface(object):
         self.update()
     
     def load_new_file(self, filename=None):
-        filename = wx.FileSelector() if filename is None else filename
+        filename = wx.FileSelector('Choose a video file') if filename is None else filename
         print(filename)
         if filename == self.filename:    # already loaded
             return
@@ -146,7 +146,7 @@ class OpenCVDataInterface(object):
     
     def get_number_of_frames(self, rebuild=False):
         if rebuild or self.num_frames is None:
-            self.num_frames = cv2_utils.binary_search_end(self.filename) + 1
+            self.num_frames = int(cv2_utils.binary_search_end(self.filename) + 1)
         return self.num_frames
     
     def get_frame_number(self):

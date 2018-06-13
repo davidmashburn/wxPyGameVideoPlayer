@@ -30,7 +30,7 @@ def add_common_kwd_args(func):
         if min_size is not None:
             ctrl.SetMinSize(min_size)
         if tooltip is not None:
-            ctrl.SetToolTipString(tooltip)
+            ctrl.SetToolTip(tooltip)
         return ctrl
     
     docAppend(func_wrapper, func)

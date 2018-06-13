@@ -148,7 +148,7 @@ class VideoPlayerFrame(PlaybackControlsFrameMixin):
         self._build_update_traces()
         self._build_traces_checkboxes()
         
-        self.main_sizer = AddMultipleSplat(wx.FlexGridSizer(5, 1, 0, 0),
+        self.main_sizer = AddMultipleSplat(wx.FlexGridSizer(6, 1, 0, 0),
                                            (self.file_controls_sizer, 1, wx.EXPAND, 0),
                                            ((20, 20), 0, 0, 0),
                                            (self.playback_controls_sizer, 1, 0, 0),

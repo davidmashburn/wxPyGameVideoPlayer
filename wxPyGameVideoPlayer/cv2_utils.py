@@ -73,7 +73,7 @@ def get_opencv_frame_as_array(video_file, frame_number, frame_rate=None):
     '''If this is a valid frame, return it as a numpy array'''
     ret, frame = get_opencv_frame(video_file, frame_number,
                                   frame_rate=frame_rate)
-    return (np.array(frame) if ret else frame)
+    return (np.array(frame)[:, :, ::-1] if ret else frame)
 
 def mp4_to_array(f):
     '''Read audio straight from a movie file using pydub (and indirectly ffmpeg)
