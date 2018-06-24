@@ -92,6 +92,12 @@ def button(frame, text, **kwds):
 def static_box(frame, text, **kwds):
     return wx.StaticBox(frame, -1, text, **kwds)
 
+@add_common_kwd_args
+@add_callback_kwd_arg(wx.EVT_SLIDER)
+def slider(frame, *args, **kwds):
+    return wx.Slider(frame, -1, *args, **kwds)
+
+
 def VSizer():
     return wx.BoxSizer(wx.VERTICAL)
 
