@@ -38,6 +38,7 @@ class OpenCVDataInterface(object):
     mpl_static_plots_fig = None
     mpl_time_plots_fig = None
     mpl_image_fig = None
+    _time_plot_click_connection = None
     use_mpl = True
     use_pygame = True
     _lock_finished_time = None # Ready to go: use -1 for totally locked
@@ -65,6 +66,15 @@ class OpenCVDataInterface(object):
         self.mpl_image_fig = (None if not self.use_mpl else
                               plt.figure(3) if mpl_image_fig is None
                               else mpl_image_fig)
+
+        # Set the onclick event for the time plot so it changes video frames
+        def onclick(event):
+            new_frame_number = event.xdata * self._video_frame_rate
+            self.gui_app.video_frame.set_frame_number(new_frame_number)
+            self.update()
+
+        self._time_plot_click_connection = self.mpl_time_plots_fig.canvas.mpl_connect('button_press_event', onclick)
+
         plt.ioff()
     
     @plotting_decorator(draw=True)
