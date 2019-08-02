@@ -81,6 +81,6 @@ def mp4_to_array(f):
     aud = pydub.AudioSegment.from_file(f)
     frame_rate = aud.frame_rate
     frame_count = aud.frame_count()
-    new_shape = aud.frame_count(), aud.channels
+    new_shape = int(aud.frame_count()), aud.channels
     arr = np.frombuffer(aud._data, dtype=np.int16).reshape(new_shape)
     return frame_rate, arr
