@@ -4,5 +4,6 @@ from . import wx_func_utils
 from . import wx_video_ui
 from . import pygame_interface
 from . import opencv_player
+from . import thumbnails
 from . import _version
 from ._version import *
